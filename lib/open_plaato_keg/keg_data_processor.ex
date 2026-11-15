@@ -262,6 +262,11 @@ defmodule OpenPlaatoKeg.KegDataProcessor do
     if id && airlock_fields != [] do
       AirlockData.publish(id, airlock_fields)
       OpenPlaatoKeg.WebSocketHandler.publish_airlock(id, airlock_fields)
+
+      if OpenPlaatoKeg.mqtt_config()[:enabled] do
+        OpenPlaatoKeg.MqttHandler.publish_airlock(id, airlock_fields)
+      end
+
       OpenPlaatoKeg.Grainfather.maybe_send(id, Keyword.get(data, :airlock_temperature), bpm && to_string(bpm))
       OpenPlaatoKeg.Brewfather.maybe_send(id, Keyword.get(data, :airlock_temperature), bpm && to_string(bpm), bubble_total)
 

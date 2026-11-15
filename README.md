@@ -170,6 +170,7 @@ If Docker isn't your preferred method, you can create an [Elixir Release](https:
 | MQTT_PASSWORD                 | Optional    | client                                                          | MQTT password |
 | MQTT_CLIENT_ID                | Optional    | open_plaato_keg_local                                           | MQTT client identifier |
 | MQTT_TOPIC                    | Optional    | plaato/keg                                                      | Base MQTT topic prefix |
+| MQTT_AIRLOCK_TOPIC            | Optional    | plaato/airlock                                                  | Base MQTT topic prefix for airlock data |
 | MQTT_JSON_OUTPUT              | Optional    | true                                                            | Publish all data as JSON to `{topic}/{keg_id}` |
 | MQTT_PROPERTY_OUTPUT          | Optional    | true                                                            | Publish each property to `{topic}/{keg_id}/{property}` |
 | BARHELPER_ENABLED             | Optional    | false                                                           | Enable BarHelper integration |
@@ -241,6 +242,13 @@ If Docker isn't your preferred method, you can create an [Elixir Release](https:
 - Useful for Home Assistant MQTT discovery or simple automations
 
 Both modes can be enabled simultaneously.
+
+#### Airlock data over MQTT
+
+Airlock data is published using the same output modes, under `MQTT_AIRLOCK_TOPIC` (default `plaato/airlock`):
+
+- JSON: `plaato/airlock/{airlock_id}` (the full stored airlock record, including `temperature`, `bubbles_per_min` and `total_bubble_count`)
+- Properties: `plaato/airlock/{airlock_id}/temperature`, `plaato/airlock/{airlock_id}/bubbles_per_min`, `plaato/airlock/{airlock_id}/error`
 
 
 ## Integrations
@@ -690,7 +698,7 @@ socket.addEventListener('message', (event) => {
 
 ### MQTT (optional)
 
-If enabled, `open-plaato-keg` can send updates to MQTT topic. Updates are the same model as REST API call (JSON), and will be published on `plaato/keg/{keg_id}` topic (prefix is changable by `MQTT_TOPIC` env variable). See `MQTT_*` environment variables.
+If enabled, `open-plaato-keg` can send updates to MQTT topic. Updates are the same model as REST API call (JSON), and will be published on `plaato/keg/{keg_id}` topic (prefix is changable by `MQTT_TOPIC` env variable). Airlock updates are published on `plaato/airlock/{airlock_id}` (prefix is changeable by `MQTT_AIRLOCK_TOPIC`). See `MQTT_*` environment variables.
 
 
 ### BarHelper (optional)

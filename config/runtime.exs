@@ -24,6 +24,7 @@ config :open_plaato_keg, :mqtt,
   password: get_env("MQTT_PASSWORD", :string, "client"),
   client: get_env("MQTT_CLIENT_ID", :string, "open_plaato_keg_local"),
   topic: get_env("MQTT_TOPIC", :string, "plaato/keg"),
+  airlock_topic: get_env("MQTT_AIRLOCK_TOPIC", :string, "plaato/airlock"),
   json_output: get_env!("MQTT_JSON_OUTPUT", :boolean, "true"),
   property_output: get_env!("MQTT_PROPERTY_OUTPUT", :boolean, "true")
 

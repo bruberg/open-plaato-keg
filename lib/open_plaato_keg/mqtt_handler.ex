@@ -1,5 +1,6 @@
 defmodule OpenPlaatoKeg.MqttHandler do
   require Logger
+  alias OpenPlaatoKeg.Models.AirlockData
   alias OpenPlaatoKeg.Models.KegData
 
   def init(args) do
@@ -31,37 +32,40 @@ defmodule OpenPlaatoKeg.MqttHandler do
   end
 
   def publish(id, data) do
-    if OpenPlaatoKeg.mqtt_config()[:json_output] do
-      keg_all_data = KegData.get(id)
+    config = OpenPlaatoKeg.mqtt_config()
+    do_publish(config, config[:topic], id, data, fn -> KegData.get(id) end)
+  end
 
+  def publish_airlock(id, data) do
+    config = OpenPlaatoKeg.mqtt_config()
+    do_publish(config, config[:airlock_topic], id, data, fn -> AirlockData.get(id) end)
+  end
+
+  defp do_publish(config, base_topic, id, data, get_all_data) do
+    if config[:json_output] do
       Tortoise.publish(
-        OpenPlaatoKeg.mqtt_config()[:client],
-        "#{OpenPlaatoKeg.mqtt_config()[:topic]}/#{id}",
-        Poison.encode!(keg_all_data),
+        config[:client],
+        "#{base_topic}/#{id}",
+        Poison.encode!(get_all_data.()),
         qos: 0,
         retain: true
       )
     end
 
-    if OpenPlaatoKeg.mqtt_config()[:property_output] do
+    if config[:property_output] do
       Enum.each(data, fn {key, value} ->
-        publish_value =
-          case value do
-            value when is_binary(value) ->
-              value
-
-            value when is_map(value) ->
-              Poison.encode!(value)
-          end
-
         Tortoise.publish(
-          OpenPlaatoKeg.mqtt_config()[:client],
-          "#{OpenPlaatoKeg.mqtt_config()[:topic]}/#{id}/#{key}",
-          publish_value,
+          config[:client],
+          "#{base_topic}/#{id}/#{key}",
+          encode_value(value),
           qos: 0,
           retain: true
         )
       end)
     end
   end
+
+  defp encode_value(value) when is_binary(value), do: value
+  defp encode_value(value) when is_map(value), do: Poison.encode!(value)
+  defp encode_value(value), do: to_string(value)
 end
