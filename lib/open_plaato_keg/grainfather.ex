@@ -85,7 +85,20 @@ defmodule OpenPlaatoKeg.Grainfather do
           b when is_number(b) -> Map.put(body, "bpm", round(b))
         end
 
-      case Req.post(url, json: body) do
+      result = Req.post(url, json: body)
+
+      case result do
+        {:ok, %{status: status, body: resp_body}} ->
+          Logger.info(
+            "Grainfather: airlock #{airlock_id} POST returned #{status}, " <>
+              "request=#{Poison.encode!(body)} response=#{inspect(resp_body)}"
+          )
+
+        {:error, reason} ->
+          Logger.info("Grainfather: airlock #{airlock_id} POST failed: #{inspect(reason)}")
+      end
+
+      case result do
         {:ok, %{status: status}} when status in 200..299 ->
           AirlockData.publish(airlock_id, [{:grainfather_last_sent_at, to_string(now_ms())}])
           Logger.info("Grainfather: sent airlock #{airlock_id} (status #{status})")
